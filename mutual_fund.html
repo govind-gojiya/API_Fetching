@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Covid Data Check</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <div style="border: 5px solid #255a35;border-radius: 10px;padding: 2rem 5rem;margin: 2rem auto;">
+            <form class="row g-3 align-items-center">
+                <div class="col-md">
+                    <label for="scheme" class="form-label m-0">Enter Scheme Name: </label>
+                </div>
+                <div class="col-md">
+                    <input type="text" class="form-control" id="scheme" name="scheme">
+                </div>
+                <div class="col-md">
+                    <button type="submit" class="btn btn-primary" onclick="searchFund(this.form); return false;">Show Fund</button>
+                </div>                
+            </form>
+        </div>
+    </div>
+    <div class="container center">
+        <div class="alert alert-primary" role="alert" id="fundSchemeName"></div>          
+        <div class="alert alert-warning" role="alert" id="msg"></div>
+        <center><h2>All Scheme Listed in Table</h2></center>      
+        <table class="table" width="100%" id="tableOfData">
+            <thead style="display: table;width: 100%;overflow-x: scroll;">
+                <tr class="table-dark">
+                    <th scope="col">Scheme Code</th>
+                    <th scope="col">Scheme Name</th>
+                </tr>
+            </thead>
+            <tbody style="display: table;width: 100%;overflow-x: scroll;" id="dataOfFund">
+            </tbody>
+      </table>
+    </div>
+
+    <script>
+        var msg = document.getElementById("msg");
+        msg.style.display = "none";
+        let tableOfData = document.getElementById("tableOfData");
+        tableOfData.style.display = "none";
+        var dataOfFund = document.getElementById("dataOfFund");
+        var fundSchemeName = document.getElementById("fundSchemeName");
+        fundSchemeName.style.display = "none";
+
+        async function searchFund(form) {
+            msg.style.display = "none";
+            var schemeNo = form.scheme.value;
+            if(schemeNo == "" || schemeNo == " " || schemeNo == null) {
+                msg.innerHTML = "Please enter scheme number.";
+                msg.style.display = "block";
+                fundSchemeName.style.display = "none";
+                return false;
+            }
+            if(!Number(schemeNo)) {
+                msg.innerHTML = "Please enter valid scheme number, it only take number";
+                msg.style.display = "block";
+                fundSchemeName.style.display = "none";
+                return false;
+            }
+            let url = "https://api.mfapi.in/mf/" + schemeNo;
+
+            let data = await (await fetch(url)).json();
+            if(data["status"] === "SUCCESS" && data.data.length > 0) {
+                fundSchemeName.innerHTML = `Found Scheme for ${schemeNo} which listed below,<br> <br>Scheme Name :  ${data["meta"]["scheme_name"]}`;
+                fundSchemeName.style.display = "block";
+            } else {
+                fundSchemeName.style.display = "none";
+                msg.innerHTML = "There is no records for given scheme number.";
+                msg.style.display = "block";
+            }
+            console.log(data);
+        }
+
+        async function allScheme() {
+            let url = "https://api.mfapi.in/mf";
+
+            let data = await (await fetch(url)).json();
+            let allScheme = "";
+            for(let i in data){
+                allScheme += `<tr><td>${data[i]["schemeCode"]}</td><td>${data[i]["schemeName"]}</td></tr>`;
+            }
+            dataOfFund.innerHTML = allScheme;
+            tableOfData.style.display = "block";
+            console.log(data);
+        }
+        allScheme();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html>
